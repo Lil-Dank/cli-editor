@@ -78,6 +78,9 @@ class ExtendedTextArea(TextArea):
             elif event.name == 'ctrl_delete':
                 event.prevent_default()
                 self.action_delete_word_right()
+            elif event.name == 'ctrl_underscore':
+                event.prevent_default()
+                self.action_comment_lines()
             else:
                 self.previous_character = event.name
 
@@ -162,6 +165,36 @@ class ExtendedTextArea(TextArea):
         self.action_cursor_line_start
         self.insert('\n')
         self.move_cursor_relative(rows=-1)
+
+
+    def action_comment_lines(self):
+        comment_symbol = ''
+
+        if self.language == 'python':
+            comment_symbol = '#'
+        
+        if self.selection.is_empty:
+            row1, col1 = self.get_cursor_line_end_location()
+            first_symbol = self.get_text_range((row1,0), (row1,1))
+
+            if comment_symbol != '' and first_symbol != comment_symbol:
+                self.insert(comment_symbol + ' ', (row1, 0))
+            
+            elif first_symbol == comment_symbol:
+                self.replace('', (row1, 0), (row1, 2))
+        
+        else:
+            row1, start = self.selection.start
+            row2, end = self.selection.end
+
+            for i in range(row1, row2+1):
+                first_symbol = self.get_text_range((i,0), (i,1))
+
+                if comment_symbol != '' and first_symbol != comment_symbol:
+                    self.insert(comment_symbol + ' ', (i, 0))
+                
+                elif first_symbol == comment_symbol:
+                    self.replace('', (i, 0), (i, 2))
 
 
 
