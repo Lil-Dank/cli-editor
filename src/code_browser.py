@@ -169,7 +169,7 @@ class ExtendedTextArea(TextArea):
     def action_comment_lines(self):
         comment_symbol = ''
 
-        if self.language == 'python':
+        if self.language == 'python' or self.language == 'yaml':
             comment_symbol = '#'
         
         if self.selection.is_empty:
