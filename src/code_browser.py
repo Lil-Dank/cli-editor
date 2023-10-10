@@ -39,11 +39,13 @@ def get_syntax_for_file(path) -> str | None:
 class ExtendedTextArea(TextArea):
     """A custom subclass of TextArea with extended functionality."""
 
+    previous_character = ''
+
     BINDINGS = [
         Binding("ctrl+end", "goto_end", "go to end", show = False),
         Binding("ctrl+home", "goto_start", "go to start", show = False),
-        Binding("ctrl+down", "move_line_down", show = False),
-        Binding("ctrl+up", "move_line_up", show = False),
+        Binding("ctrl+j", "add_newline_below", show = False),
+        Binding("ctrl+e", "add_newline_above", show = False, priority=True),
     ]
 
 
@@ -62,6 +64,15 @@ class ExtendedTextArea(TextArea):
             self.insert("[]")
             self.move_cursor_relative(columns=-1)
             event.prevent_default()
+
+        if not event.is_printable:
+            if event.name == 'down' and self.previous_character == 'escape':
+                event.prevent_default()
+                self.action_move_line_down()
+            elif event.name == 'up' and self.previous_character == 'escape':
+                event.prevent_default()
+                self.action_move_line_up()
+            self.previous_character = event.name
 
 
     def action_goto_end(self):
