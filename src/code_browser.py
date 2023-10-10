@@ -86,33 +86,64 @@ class ExtendedTextArea(TextArea):
 
 
     def action_move_line_down(self):
-        row1, col1 = self.get_cursor_line_end_location()
-        line_to_move_down = self.get_text_range((row1,0), (row1, col1))
-        
-        self.move_cursor_relative(rows=1)
+        if self.selection.is_empty:
+            row1, col1 = self.get_cursor_line_end_location()
+            if not row1 + 1 > self.document.line_count:
+                line_to_move_down = self.get_text_range((row1,0), (row1, col1))
+                
+                self.move_cursor_relative(rows=1)
 
-        row2, col2 = self.get_cursor_line_end_location()
-        line_to_move_up = self.get_text_range((row2,0), (row2, col2))
+                row2, col2 = self.get_cursor_line_end_location()
+                line_to_move_up = self.get_text_range((row2,0), (row2, col2))
 
-        self.replace('', (row1, 0), (row1, col1))
-        self.insert(line_to_move_up, (row1, 0))
-        self.replace('', (row2, 0), (row2, col2))
-        self.insert(line_to_move_down, (row2, 0))
+                self.replace('', (row1, 0), (row1, col1))
+                self.insert(line_to_move_up, (row1, 0))
+                self.replace('', (row2, 0), (row2, col2))
+                self.insert(line_to_move_down, (row2, 0))
+        else:
+            row1, start = self.selection.start
+            row2, end = self.selection.end
+            
+            if not row2 + 2 > self.document.line_count:
+                lines_to_move_down = self.get_text_range((row1,0), (row2, end*10))
+                line_to_move_up = self.get_text_range((row2+1,0), (row2+1, end*10))
+
+                self.replace('', (row1, 0), (row2+1, end*10))
+                self.insert(line_to_move_up + '\n', (row1, 0))
+                self.insert(lines_to_move_down, (row1+1, 0))
+                self.move_cursor((row1+1, start))
+                self.move_cursor((row2+1, end), select=True)
 
 
     def action_move_line_up(self):
-        row1, col1 = self.get_cursor_line_end_location()
-        line_to_move_up = self.get_text_range((row1,0), (row1, col1))
+        if self.selection.is_empty:
+            row1, col1 = self.get_cursor_line_end_location()
+            
+            if not row1 - 1 < 0:
+                line_to_move_up = self.get_text_range((row1,0), (row1, col1))
 
-        self.move_cursor_relative(rows=-1)
+                self.move_cursor_relative(rows=-1)
 
-        row2, col2 = self.get_cursor_line_end_location()
-        line_to_move_down = self.get_text_range((row2,0), (row2, col2))
+                row2, col2 = self.get_cursor_line_end_location()
+                line_to_move_down = self.get_text_range((row2,0), (row2, col2))
 
-        self.replace('', (row1, 0), (row1, col1))
-        self.insert(line_to_move_down, (row1, 0))
-        self.replace('', (row2, 0), (row2, col2))
-        self.insert(line_to_move_up, (row2, 0))
+                self.replace('', (row1, 0), (row1, col1))
+                self.insert(line_to_move_down, (row1, 0))
+                self.replace('', (row2, 0), (row2, col2))
+                self.insert(line_to_move_up, (row2, 0))
+        else:
+            row1, start = self.selection.start
+            if not row1 - 1 < 0:
+                row2, end = self.selection.end
+
+                lines_to_move_up = self.get_text_range((row1,0), (row2, end*10))
+                line_to_move_down = self.get_text_range((row1-1,0), (row1-1, end*10))
+
+                self.replace('', (row1-1, 0), (row2, end*10))
+                self.insert(lines_to_move_up, (row1-1, 0))
+                self.insert(line_to_move_down + '\n', (row2, 0))
+                self.move_cursor((row1-1, start))
+                self.move_cursor((row2-1, end), select=True)
 
 
     def action_add_newline_below(self):
