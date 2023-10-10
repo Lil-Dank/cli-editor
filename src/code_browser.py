@@ -86,12 +86,12 @@ class ExtendedTextArea(TextArea):
 
     def action_goto_end(self):
         self.move_cursor_relative(rows=self.document.line_count)
-        self.move_cursor_relative(columns=self.document.line_count*10)
+        self.move_cursor_relative(columns=self.document.line_count*100)
 
 
     def action_goto_start(self):
         self.move_cursor_relative(rows=-self.document.line_count)
-        self.move_cursor_relative(columns=-self.document.line_count*10)
+        self.move_cursor_relative(columns=-self.document.line_count*100)
 
 
     def action_move_line_down(self):
@@ -114,10 +114,10 @@ class ExtendedTextArea(TextArea):
             row2, end = self.selection.end
             
             if not row2 + 2 > self.document.line_count:
-                lines_to_move_down = self.get_text_range((row1,0), (row2, end*10))
-                line_to_move_up = self.get_text_range((row2+1,0), (row2+1, end*10))
+                lines_to_move_down = self.get_text_range((row1,0), (row2, end*100))
+                line_to_move_up = self.get_text_range((row2+1,0), (row2+1, end*100))
 
-                self.replace('', (row1, 0), (row2+1, end*10))
+                self.replace('', (row1, 0), (row2+1, end*100))
                 self.insert(line_to_move_up + '\n', (row1, 0))
                 self.insert(lines_to_move_down, (row1+1, 0))
                 self.move_cursor((row1+1, start))
@@ -145,10 +145,10 @@ class ExtendedTextArea(TextArea):
             if not row1 - 1 < 0:
                 row2, end = self.selection.end
 
-                lines_to_move_up = self.get_text_range((row1,0), (row2, end*10))
-                line_to_move_down = self.get_text_range((row1-1,0), (row1-1, end*10))
+                lines_to_move_up = self.get_text_range((row1,0), (row2, end*100))
+                line_to_move_down = self.get_text_range((row1-1,0), (row1-1, end*100))
 
-                self.replace('', (row1-1, 0), (row2, end*10))
+                self.replace('', (row1-1, 0), (row2, end*100))
                 self.insert(lines_to_move_up, (row1-1, 0))
                 self.insert(line_to_move_down + '\n', (row2, 0))
                 self.move_cursor((row1-1, start))
