@@ -75,6 +75,9 @@ class ExtendedTextArea(TextArea):
             elif event.name == 'backspace' and self.previous_character == 'ctrl_@':
                 event.prevent_default()
                 self.action_delete_word_left()
+            elif event.name == 'ctrl_delete':
+                event.prevent_default()
+                self.action_delete_word_right()
             else:
                 self.previous_character = event.name
 
