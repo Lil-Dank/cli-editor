@@ -186,7 +186,12 @@ class ExtendedTextArea(TextArea):
             row1 = self.selection.start[0]
             row2 = self.selection.end[0]
 
-            for i in range(row1, row2+1):
+            if row1 <= row2:
+                _range = range(row1, row2+1)
+            else:
+                _range = range(row2, row1+1)
+
+            for i in _range:
                 first_symbol = self.get_text_range((i,0), (i,1))
 
                 if comment_symbol != '' and first_symbol != comment_symbol:
