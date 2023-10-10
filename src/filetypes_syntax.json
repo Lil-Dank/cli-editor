@@ -1,0 +1,10 @@
+{
+    "py": "python",
+    "md": "markdown",
+    "json": "json",
+    "yml": "yaml",
+    "yaml": "yaml",
+    "css": "css",
+    "sql": "sql",
+    "toml": "toml"
+}
