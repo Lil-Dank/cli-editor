@@ -72,7 +72,11 @@ class ExtendedTextArea(TextArea):
             elif event.name == 'up' and self.previous_character == 'escape':
                 event.prevent_default()
                 self.action_move_line_up()
-            self.previous_character = event.name
+            elif event.name == 'backspace' and self.previous_character == 'ctrl_@':
+                event.prevent_default()
+                self.action_delete_word_left()
+            else:
+                self.previous_character = event.name
 
 
     def action_goto_end(self):
