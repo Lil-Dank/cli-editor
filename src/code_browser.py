@@ -79,8 +79,8 @@ class ExtendedDirectoryTree(DirectoryTree):
     # cursor_node_children = reactive(self.cursor_node.children)
 
     BINDINGS = [
-        Binding("left", "closedir", "Updir", show = False),
-        Binding("right", "opendir", "opendir", show = False),
+        Binding("left", "closedir", "Close dir"),
+        Binding("right", "opendir", "Expand dir"),
     ]
 
     FILTER_LIST = [
