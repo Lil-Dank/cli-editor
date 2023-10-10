@@ -42,6 +42,8 @@ class ExtendedTextArea(TextArea):
     BINDINGS = [
         Binding("ctrl+end", "goto_end", "go to end", show = False),
         Binding("ctrl+home", "goto_start", "go to start", show = False),
+        Binding("ctrl+down", "move_line_down", show = False),
+        Binding("ctrl+up", "move_line_up", show = False),
     ]
 
 
@@ -70,6 +72,36 @@ class ExtendedTextArea(TextArea):
     def action_goto_start(self):
         self.move_cursor_relative(rows=-self.document.line_count)
         self.move_cursor_relative(columns=-self.document.line_count*10)
+
+
+    def action_move_line_down(self):
+        row1, col1 = self.get_cursor_line_end_location()
+        line_to_move_down = self.get_text_range((row1,0), (row1, col1))
+        
+        self.move_cursor_relative(rows=1)
+
+        row2, col2 = self.get_cursor_line_end_location()
+        line_to_move_up = self.get_text_range((row2,0), (row2, col2))
+
+        self.replace('', (row1, 0), (row1, col1))
+        self.insert(line_to_move_up, (row1, 0))
+        self.replace('', (row2, 0), (row2, col2))
+        self.insert(line_to_move_down, (row2, 0))
+
+
+    def action_move_line_up(self):
+        row1, col1 = self.get_cursor_line_end_location()
+        line_to_move_up = self.get_text_range((row1,0), (row1, col1))
+
+        self.move_cursor_relative(rows=-1)
+
+        row2, col2 = self.get_cursor_line_end_location()
+        line_to_move_down = self.get_text_range((row2,0), (row2, col2))
+
+        self.replace('', (row1, 0), (row1, col1))
+        self.insert(line_to_move_down, (row1, 0))
+        self.replace('', (row2, 0), (row2, col2))
+        self.insert(line_to_move_up, (row2, 0))
 
 
 
