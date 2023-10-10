@@ -115,6 +115,17 @@ class ExtendedTextArea(TextArea):
         self.insert(line_to_move_up, (row2, 0))
 
 
+    def action_add_newline_below(self):
+        self.action_cursor_line_end()
+        self.insert('\n')
+
+
+    def action_add_newline_above(self):
+        self.action_cursor_line_start
+        self.insert('\n')
+        self.move_cursor_relative(rows=-1)
+
+
 
 class ExtendedDirectoryTree(DirectoryTree):
     """A subclass of TextArea with parenthesis-closing functionality."""
