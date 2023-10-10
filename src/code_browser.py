@@ -174,7 +174,7 @@ class ExtendedTextArea(TextArea):
             comment_symbol = '#'
         
         if self.selection.is_empty:
-            row1, col1 = self.get_cursor_line_end_location()
+            row1 = self.get_cursor_line_end_location()[0]
             first_symbol = self.get_text_range((row1,0), (row1,1))
 
             if comment_symbol != '' and first_symbol != comment_symbol:
@@ -184,8 +184,8 @@ class ExtendedTextArea(TextArea):
                 self.replace('', (row1, 0), (row1, 2))
         
         else:
-            row1, start = self.selection.start
-            row2, end = self.selection.end
+            row1 = self.selection.start[0]
+            row2 = self.selection.end[0]
 
             for i in range(row1, row2+1):
                 first_symbol = self.get_text_range((i,0), (i,1))
