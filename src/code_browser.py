@@ -9,7 +9,6 @@ Run with:
 import sys
 import json
 import os
-from pathlib import Path
 
 from textual import events
 from textual.app import App, ComposeResult
@@ -200,8 +199,6 @@ class ExtendedTextArea(TextArea):
 
 class ExtendedDirectoryTree(DirectoryTree):
     """A subclass of TextArea with parenthesis-closing functionality."""
-
-    # cursor_node_children = reactive(self.cursor_node.children)
 
     BINDINGS = [
         Binding("left", "closedir", "Close dir"),
