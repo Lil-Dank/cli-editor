@@ -312,6 +312,9 @@ class ExtendedDirectoryTree(DirectoryTree):
 
     def action_closedir(self):
         if not self.cursor_node.is_root: # type: ignore
+            if self.cursor_node._allow_expand and self.cursor_node.is_expanded: # type: ignore
+                self.cursor_node.collapse() # type: ignore
+                return
             if (self.cursor_node.parent.is_expanded and # type: ignore
                 not self.cursor_node.parent.is_root): # type: ignore
                 self.select_node(self.cursor_node.parent) # type: ignore
