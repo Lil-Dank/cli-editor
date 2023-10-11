@@ -285,8 +285,8 @@ class ExtendedTextArea(TextArea):
 
             lines_to_duplicate = self.get_text_range((row1,0), (row2, end*100))
 
-            self.move_cursor((row1 - 1, 0))
-            self.insert('\n' + lines_to_duplicate)
+            self.move_cursor((row1, 0))
+            self.insert(lines_to_duplicate + '\n')
             
             if top_to_bottom_selection:
                 self.move_cursor((row1, start))
