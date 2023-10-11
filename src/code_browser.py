@@ -29,6 +29,7 @@ with open(
 
 def get_syntax_for_file(path) -> str | None:
     file_extension = str(path).replace('\\', '/').split('/')[-1].split('.')[-1]
+
     if file_extension in FILETYPES_SYNTAX.keys():
         return FILETYPES_SYNTAX[file_extension]
     return None
@@ -70,18 +71,23 @@ class ExtendedTextArea(TextArea):
             if event.name == 'down' and self.previous_character == 'escape':
                 event.prevent_default()
                 self.action_move_line_down()
+            
             elif event.name == 'up' and self.previous_character == 'escape':
                 event.prevent_default()
                 self.action_move_line_up()
+            
             elif event.name == 'backspace' and self.previous_character == 'ctrl_@':
                 event.prevent_default()
                 self.action_delete_word_left()
+            
             elif event.name == 'ctrl_delete':
                 event.prevent_default()
                 self.action_delete_word_right()
+            
             elif event.name == 'ctrl_underscore':
                 event.prevent_default()
                 self.action_comment_lines()
+            
             else:
                 self.previous_character = event.name
 
@@ -99,6 +105,7 @@ class ExtendedTextArea(TextArea):
     def action_move_line_down(self):
         if self.selection.is_empty:
             row1, col1 = self.get_cursor_line_end_location()
+            
             if not row1 + 1 > self.document.line_count:
                 line_to_move_down = self.get_text_range((row1,0), (row1, col1))
                 
@@ -111,6 +118,7 @@ class ExtendedTextArea(TextArea):
                 self.insert(line_to_move_up, (row1, 0))
                 self.replace('', (row2, 0), (row2, col2))
                 self.insert(line_to_move_down, (row2, 0))
+        
         else:
             if self.selection.start[0] <= self.selection.end[0]:
                 row1, start = self.selection.start
@@ -126,6 +134,7 @@ class ExtendedTextArea(TextArea):
                 self.replace('', (row1, 0), (row2+1, end*100))
                 self.insert(line_to_move_up + '\n', (row1, 0))
                 self.insert(lines_to_move_down, (row1+1, 0))
+
                 if self.selection.start[0] <= self.selection.end[0]:
                     self.move_cursor((row1+1, start))
                     self.move_cursor((row2+1, end), select=True)
@@ -315,6 +324,7 @@ class ExtendedDirectoryTree(DirectoryTree):
             if self.cursor_node._allow_expand and self.cursor_node.is_expanded: # type: ignore
                 self.cursor_node.collapse() # type: ignore
                 return
+            
             if (self.cursor_node.parent.is_expanded and # type: ignore
                 not self.cursor_node.parent.is_root): # type: ignore
                 self.select_node(self.cursor_node.parent) # type: ignore
@@ -326,12 +336,16 @@ class ExtendedDirectoryTree(DirectoryTree):
             self.cursor_node.expand() # type: ignore
 
 
-    async def on_tree_node_expanded(self, event: DirectoryTree.NodeExpanded):
+    def on_tree_node_expanded(self, event: DirectoryTree.NodeExpanded):
         if event.node.is_root:
+            # Select first node after hiding Root
             self.action_cursor_down()
+        
         else:
             try:
+                # Select first child node on expanding node
                 self.select_node(self.cursor_node.children[0]) # type: ignore
+            # Escape Error which makes it never happen ?¿?
             except IndexError:
                 pass
 
@@ -367,15 +381,9 @@ class CodeBrowser(App):
     def on_mount(self) -> None:
         if not os.path.isfile(self.path):
             self.query_one(DirectoryTree).focus()
+        
         else:
-            code_view = self.query_one(TextArea)
-            code_view.focus()
-            with open(str(self.path)) as file:
-                syntax = get_syntax_for_file(self.path)
-                if syntax:
-                    code_view.language = syntax
-
-                code_view.load_text(file.read())
+            self.open_file(self.path)
 
 
     def on_directory_tree_file_selected(
@@ -383,24 +391,30 @@ class CodeBrowser(App):
     ) -> None:
         """Called when the user click a file in the directory tree."""
         event.stop()
-        code_view = self.query_one("#code", TextArea)
         
-        with open(str(event.path)) as file:
-            syntax = get_syntax_for_file(event.path)
-            if syntax:
-                code_view.language = syntax
-            
-            code_view.load_text(file.read())
-
-        code_view.focus()
+        self.open_file(event.path)
         self.show_tree = not self.show_tree
-        self.sub_title = str(event.path)
 
 
     def action_toggle_files(self) -> None:
         """Called in response to key binding."""
         self.show_tree = not self.show_tree
         self.query_one(DirectoryTree).focus()
+
+
+    def open_file(self, path):
+        code_view = self.query_one("#code", TextArea)
+        
+        with open(str(path)) as file:
+            syntax = get_syntax_for_file(path)
+
+            if syntax:
+                code_view.language = syntax
+            
+            code_view.load_text(file.read())
+
+        code_view.focus()
+        self.sub_title = str(path)
 
 
 
