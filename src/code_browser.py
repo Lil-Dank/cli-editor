@@ -45,6 +45,8 @@ class ExtendedTextArea(TextArea):
         Binding("ctrl+home", "goto_start", "go to start", show = False),
         Binding("ctrl+j", "add_newline_below", show = False),
         Binding("ctrl+e", "add_newline_above", show = False, priority=True),
+        Binding("ctrl+down", "duplicate_below", show = False, priority=True),
+        Binding("ctrl+up", "duplicate_above", show = False, priority=True),
     ]
 
 
@@ -216,6 +218,73 @@ class ExtendedTextArea(TextArea):
                 
                 elif first_symbol == comment_symbol:
                     self.replace('', (i, 0), (i, 2))
+
+
+    def action_duplicate_below(self):
+        if self.selection.is_empty:
+            row, pos = self.cursor_location
+            end = self.get_cursor_line_end_location()[1]
+            line_to_duplicate = self.get_text_range((row, 0), (row, end))
+
+            self.move_cursor((row + 1, 0))
+            self.insert(line_to_duplicate + '\n')
+            self.move_cursor((row + 1, pos))
+
+        else:
+            top_to_bottom_selection = self.selection.start[0] <= self.selection.end[0]
+
+            if top_to_bottom_selection:
+                row1, start = self.selection.start
+                row2, end = self.selection.end
+            else:
+                row1, start = self.selection.end
+                row2, end = self.selection.start
+
+            lines_to_move = row2 - row1 + 1
+            lines_to_duplicate = self.get_text_range((row1,0), (row2, end*100))
+
+            self.move_cursor((row2 + 1, 0))
+            self.insert(lines_to_duplicate + '\n')
+            
+            if top_to_bottom_selection:
+                self.move_cursor((row1+lines_to_move, start))
+                self.move_cursor((row2+lines_to_move, end), select=True)
+            else:
+                self.move_cursor((row2+lines_to_move, end))
+                self.move_cursor((row1+lines_to_move, start), select=True)
+
+
+    def action_duplicate_above(self):
+        if self.selection.is_empty:
+            row, pos = self.cursor_location
+            end = self.get_cursor_line_end_location()[1]
+            line_to_duplicate = self.get_text_range((row, 0), (row, end))
+            
+            self.move_cursor((row - 1, end*100))
+            self.insert('\n' + line_to_duplicate)
+            self.move_cursor((row, pos))
+
+        else:
+            top_to_bottom_selection = self.selection.start[0] <= self.selection.end[0]
+            
+            if top_to_bottom_selection:
+                row1, start = self.selection.start
+                row2, end = self.selection.end
+            else:
+                row1, start = self.selection.end
+                row2, end = self.selection.start
+
+            lines_to_duplicate = self.get_text_range((row1,0), (row2, end*100))
+
+            self.move_cursor((row1 - 1, 0))
+            self.insert('\n' + lines_to_duplicate)
+            
+            if top_to_bottom_selection:
+                self.move_cursor((row1, start))
+                self.move_cursor((row2, end), select=True)
+            else:
+                self.move_cursor((row2, end))
+                self.move_cursor((row1, start), select=True)
 
 
 
