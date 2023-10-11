@@ -141,10 +141,14 @@ class ExtendedTextArea(TextArea):
                 self.replace('', (row2, 0), (row2, col2))
                 self.insert(line_to_move_up, (row2, 0))
         else:
-            row1, start = self.selection.start
-            if not row1 - 1 < 0:
+            if self.selection.start[0] <= self.selection.end[0]:
+                row1, start = self.selection.start
                 row2, end = self.selection.end
-
+            else:
+                row1, start = self.selection.end
+                row2, end = self.selection.start
+            
+            if not row1 - 1 < 0:
                 lines_to_move_up = self.get_text_range((row1,0), (row2, end*100))
                 line_to_move_down = self.get_text_range((row1-1,0), (row1-1, end*100))
 
