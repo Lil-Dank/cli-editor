@@ -104,20 +104,19 @@ class ExtendedTextArea(TextArea):
 
     def action_move_line_down(self):
         if self.selection.is_empty:
-            row1, col1 = self.get_cursor_line_end_location()
+            row1, end = self.get_cursor_line_end_location()
+            end_of_line = end * 100 if end >= 1 else 999
+            pos = self.cursor_location[1]
             
             if not row1 + 1 > self.document.line_count:
-                line_to_move_down = self.get_text_range((row1,0), (row1, col1))
-                
-                self.move_cursor_relative(rows=1)
+                line_to_move_down = self.get_text_range((row1,0), (row1, end))
+                line_to_move_up = self.get_text_range(
+                    (row1 + 1, 0),
+                    (row1 + 1, end_of_line))
 
-                row2, col2 = self.get_cursor_line_end_location()
-                line_to_move_up = self.get_text_range((row2,0), (row2, col2))
-
-                self.replace('', (row1, 0), (row1, col1))
-                self.insert(line_to_move_up, (row1, 0))
-                self.replace('', (row2, 0), (row2, col2))
-                self.insert(line_to_move_down, (row2, 0))
+                self.replace(line_to_move_up, (row1, 0), (row1, end))
+                self.replace(line_to_move_down, (row1 + 1, 0), (row1 + 1, end_of_line))
+                self.move_cursor((row1 + 1, pos))
         
         else:
             if self.selection.start[0] <= self.selection.end[0]:
@@ -128,10 +127,11 @@ class ExtendedTextArea(TextArea):
                 row2, end = self.selection.start
             
             if not row2 + 2 > self.document.line_count:
-                lines_to_move_down = self.get_text_range((row1,0), (row2, end*100))
-                line_to_move_up = self.get_text_range((row2+1,0), (row2+1, end*100))
+                end_of_line = end * 100 if end >= 1 else 999
+                lines_to_move_down = self.get_text_range((row1,0), (row2, end_of_line))
+                line_to_move_up = self.get_text_range((row2+1,0), (row2+1, end_of_line))
 
-                self.replace('', (row1, 0), (row2+1, end*100))
+                self.replace('', (row1, 0), (row2+1, end_of_line))
                 self.insert(line_to_move_up + '\n', (row1, 0))
                 self.insert(lines_to_move_down, (row1+1, 0))
 
@@ -145,20 +145,21 @@ class ExtendedTextArea(TextArea):
 
     def action_move_line_up(self):
         if self.selection.is_empty:
-            row1, col1 = self.get_cursor_line_end_location()
-            
+            row1, end = self.get_cursor_line_end_location()
+            end_of_line = end * 100 if end >= 1 else 999
+            pos = self.cursor_location[1]
+
             if not row1 - 1 < 0:
-                line_to_move_up = self.get_text_range((row1,0), (row1, col1))
+                line_to_move_up = self.get_text_range((row1, 0), (row1, end))
+                line_to_move_down = self.get_text_range(
+                    (row1 - 1, 0),
+                    (row1 - 1, end_of_line))
 
-                self.move_cursor_relative(rows=-1)
-
-                row2, col2 = self.get_cursor_line_end_location()
-                line_to_move_down = self.get_text_range((row2,0), (row2, col2))
-
-                self.replace('', (row1, 0), (row1, col1))
-                self.insert(line_to_move_down, (row1, 0))
-                self.replace('', (row2, 0), (row2, col2))
-                self.insert(line_to_move_up, (row2, 0))
+                self.replace(line_to_move_down, (row1, 0), (row1, end))
+                self.replace(line_to_move_up,
+                             (row1 - 1, 0),
+                             (row1 - 1, end_of_line))
+                self.move_cursor((row1-1, pos))
         
         else:
             if self.selection.start[0] <= self.selection.end[0]:
@@ -169,12 +170,14 @@ class ExtendedTextArea(TextArea):
                 row2, end = self.selection.start
             
             if not row1 - 1 < 0:
-                lines_to_move_up = self.get_text_range((row1,0), (row2, end*100))
-                line_to_move_down = self.get_text_range((row1-1,0), (row1-1, end*100))
+                end_of_line = end * 100 if end >= 1 else 999
+                lines_to_move_up = self.get_text_range((row1,0), (row2, end_of_line))
+                line_to_move_down = self.get_text_range((row1-1,0), (row1-1, end_of_line))
 
-                self.replace('', (row1-1, 0), (row2, end*100))
+                self.replace('', (row1-1, 0), (row2, end_of_line))
                 self.insert(lines_to_move_up, (row1-1, 0))
                 self.insert(line_to_move_down + '\n', (row2, 0))
+
                 if self.selection.start[0] <= self.selection.end[0]:
                     self.move_cursor((row1-1, start))
                     self.move_cursor((row2-1, end), select=True)
@@ -189,7 +192,7 @@ class ExtendedTextArea(TextArea):
 
 
     def action_add_newline_above(self):
-        self.action_cursor_line_start
+        self.action_cursor_line_start()
         self.insert('\n')
         self.move_cursor_relative(rows=-1)
 
@@ -197,60 +200,59 @@ class ExtendedTextArea(TextArea):
     def action_comment_lines(self):
         comment_symbol = ''
 
-        if self.language == 'python' or self.language == 'yaml':
+        if self.language == 'python' or self.language == 'yaml': # TODO: Turn into function
             comment_symbol = '#'
         
-        if self.selection.is_empty:
-            row1 = self.get_cursor_line_end_location()[0]
-            first_symbol = self.get_text_range((row1,0), (row1,1))
+        if comment_symbol != '':
+            if self.selection.is_empty:
+                row1 = self.get_cursor_line_end_location()[0]
+                first_symbol = self.get_text_range((row1,0), (row1,1))
 
-            if comment_symbol != '' and first_symbol != comment_symbol:
-                self.insert(comment_symbol + ' ', (row1, 0))
+                if first_symbol == comment_symbol:
+                    self.replace('', (row1, 0), (row1, 2))
+                else:
+                    self.insert(comment_symbol + ' ', (row1, 0))
             
-            elif first_symbol == comment_symbol:
-                self.replace('', (row1, 0), (row1, 2))
-        
-        else:
-            row1 = self.selection.start[0]
-            row2 = self.selection.end[0]
-
-            if row1 <= row2:
-                _range = range(row1, row2+1)
             else:
-                _range = range(row2, row1+1)
+                row1 = self.selection.start[0]
+                row2 = self.selection.end[0]
 
-            for i in _range:
-                first_symbol = self.get_text_range((i,0), (i,1))
+                if row1 <= row2:
+                    _range = range(row1, row2+1)
+                else:
+                    _range = range(row2, row1+1)
 
-                if comment_symbol != '' and first_symbol != comment_symbol:
-                    self.insert(comment_symbol + ' ', (i, 0))
-                
-                elif first_symbol == comment_symbol:
-                    self.replace('', (i, 0), (i, 2))
+                for i in _range:
+                    first_symbol = self.get_text_range((i,0), (i,1))
+
+                    if first_symbol == comment_symbol:
+                        self.replace('', (i, 0), (i, 2))
+                    else:
+                        self.insert(comment_symbol + ' ', (i, 0))
 
 
     def action_duplicate_below(self):
         if self.selection.is_empty:
-            row, pos = self.cursor_location
-            end = self.get_cursor_line_end_location()[1]
-            line_to_duplicate = self.get_text_range((row, 0), (row, end))
+            row = self.cursor_location[0]
+            line_to_duplicate = self.get_text_range(
+                (row, 0),
+                (row, self.get_cursor_line_end_location()[1]))
 
-            self.move_cursor((row + 1, 0))
-            self.insert(line_to_duplicate + '\n')
-            self.move_cursor((row + 1, pos))
+            self.insert(line_to_duplicate + '\n', (row+1, 0))
 
         else:
             top_to_bottom_selection = self.selection.start[0] <= self.selection.end[0]
 
-            if top_to_bottom_selection:
-                row1, start = self.selection.start
-                row2, end = self.selection.end
-            else:
+            row1, start = self.selection.start
+            row2, end = self.selection.end
+            if not top_to_bottom_selection:
                 row1, start = self.selection.end
                 row2, end = self.selection.start
 
             lines_to_move = row2 - row1 + 1
-            lines_to_duplicate = self.get_text_range((row1,0), (row2, end*100))
+            lines_to_duplicate = self.get_text_range(
+                (row1, 0),
+                (row2, end * 100 if end >= 1 else 999))
 
             self.move_cursor((row2 + 1, 0))
             self.insert(lines_to_duplicate + '\n')
@@ -265,25 +267,26 @@ class ExtendedTextArea(TextArea):
 
     def action_duplicate_above(self):
         if self.selection.is_empty:
-            row, pos = self.cursor_location
-            end = self.get_cursor_line_end_location()[1]
-            line_to_duplicate = self.get_text_range((row, 0), (row, end))
+            row = self.cursor_location[0]
+            line_to_duplicate = self.get_text_range(
+                (row, 0),
+                (row, self.get_cursor_line_end_location()[1]))
             
-            self.move_cursor((row - 1, end*100))
-            self.insert('\n' + line_to_duplicate)
-            self.move_cursor((row, pos))
+            self.insert(line_to_duplicate + '\n', (row + 1, 0))
+            self.move_cursor_relative(rows=-1)
 
         else:
             top_to_bottom_selection = self.selection.start[0] <= self.selection.end[0]
             
-            if top_to_bottom_selection:
-                row1, start = self.selection.start
-                row2, end = self.selection.end
-            else:
+            row1, start = self.selection.start
+            row2, end = self.selection.end
+            if not top_to_bottom_selection:
                 row1, start = self.selection.end
                 row2, end = self.selection.start
 
-            lines_to_duplicate = self.get_text_range((row1,0), (row2, end*100))
+            lines_to_duplicate = self.get_text_range(
+                (row1,0),
+                (row2, end * 100 if end >= 1 else 999))
 
             self.move_cursor((row1, 0))
             self.insert(lines_to_duplicate + '\n')
@@ -321,7 +324,7 @@ class ExtendedDirectoryTree(DirectoryTree):
 
     def action_closedir(self):
         if not self.cursor_node.is_root: # type: ignore
-            if self.cursor_node._allow_expand and self.cursor_node.is_expanded: # type: ignore
+            if self.cursor_node.allow_expand and self.cursor_node.is_expanded: # type: ignore
                 self.cursor_node.collapse() # type: ignore
                 return
             
@@ -356,7 +359,7 @@ class CodeBrowser(App):
 
     path = "./" if len(sys.argv) < 2 else sys.argv[1]
     CSS_PATH = "code_browser.tcss"
-    BINDINGS = [
+    BINDINGS = [ # ** Global Bindings
         Binding("ctrl+q", "quit", "Quit", priority=True),
     ]
     show_tree = var(True)
