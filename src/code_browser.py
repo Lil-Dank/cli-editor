@@ -124,8 +124,12 @@ class ExtendedTextArea(TextArea):
                 self.replace('', (row1, 0), (row2+1, end*100))
                 self.insert(line_to_move_up + '\n', (row1, 0))
                 self.insert(lines_to_move_down, (row1+1, 0))
-                self.move_cursor((row1+1, start))
-                self.move_cursor((row2+1, end), select=True)
+                if self.selection.start[0] <= self.selection.end[0]:
+                    self.move_cursor((row1+1, start))
+                    self.move_cursor((row2+1, end), select=True)
+                else:
+                    self.move_cursor((row2+1, end))
+                    self.move_cursor((row1+1, start), select=True)
 
 
     def action_move_line_up(self):
@@ -144,6 +148,7 @@ class ExtendedTextArea(TextArea):
                 self.insert(line_to_move_down, (row1, 0))
                 self.replace('', (row2, 0), (row2, col2))
                 self.insert(line_to_move_up, (row2, 0))
+        
         else:
             if self.selection.start[0] <= self.selection.end[0]:
                 row1, start = self.selection.start
@@ -159,8 +164,12 @@ class ExtendedTextArea(TextArea):
                 self.replace('', (row1-1, 0), (row2, end*100))
                 self.insert(lines_to_move_up, (row1-1, 0))
                 self.insert(line_to_move_down + '\n', (row2, 0))
-                self.move_cursor((row1-1, start))
-                self.move_cursor((row2-1, end), select=True)
+                if self.selection.start[0] <= self.selection.end[0]:
+                    self.move_cursor((row1-1, start))
+                    self.move_cursor((row2-1, end), select=True)
+                else:
+                    self.move_cursor((row2-1, end))
+                    self.move_cursor((row1-1, start), select=True)
 
 
     def action_add_newline_below(self):
